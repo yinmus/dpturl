@@ -43,3 +43,4 @@ python dpturl.py -C sh https://example.com/script.sh
 ___
 **доп.**
 - **Желательно при указании url, закрывать его в кавычки** - `'https://example/image.png'`
+- **проект в mvp версии, планируются улучшения**
