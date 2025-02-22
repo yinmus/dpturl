@@ -7,6 +7,11 @@
 - [`tqdm`](https://pypi.org/project/tqdm/)
 
 ## Установка
+```bash
+git clone https://github.com/yinmus/dpturl.git
+cd dpturl
+```
+
 - [Инсталлер для Windows](installer.bat)
 - [Инсталлер для Linux (Debian/Ubuntu, Arch/Manjaro)](installer.sh)
 
