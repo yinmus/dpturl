@@ -40,5 +40,6 @@ python dpturl.py -C python https://example.com/script.py
 ```bash
 python dpturl.py -C sh https://example.com/script.sh
 ```
-доп.
-`**Желательно при указании url, закрывать его в кавычки**` - 'https://example/image.png'
+___
+**доп.**
+- **Желательно при указании url, закрывать его в кавычки** - `'https://example/image.png'`
