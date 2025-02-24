@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -x
-
 INSTALL_DIR="/home/thm/.dpturl"
 VENV_DIR="$INSTALL_DIR/venv"
 SCRIPT_NAME="dpturl.py"
