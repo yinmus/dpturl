@@ -2,13 +2,11 @@
 
 set -x
 
-# Конфигурация
 INSTALL_DIR="/home/thm/.dpturl"
 VENV_DIR="$INSTALL_DIR/venv"
 SCRIPT_NAME="dpturl.py"
 BIN_PATH="/usr/local/bin/dpturl"
 
-# Функция для установки зависимостей
 install_dependencies() {
     echo "+ Установка зависимостей..."
     echo "1. Arch/Manjaro"
@@ -27,32 +25,26 @@ install_dependencies() {
     fi
 }
 
-# Основной процесс установки
 echo "Этот скрипт установит dpturl в $INSTALL_DIR и создаст виртуальное окружение."
 read -rp "Продолжить? [Y/n] " confirm
 
 if [[ -z "$confirm" || "$confirm" =~ ^[Yy]$ ]]; then
-    # Создание директории для установки
     mkdir -p "$INSTALL_DIR"
 
-    # Установка зависимостей
     read -rp "Установить зависимости? [Y/n] " install_deps
     if [[ -z "$install_deps" || "$install_deps" =~ ^[Yy]$ ]]; then
         install_dependencies
     fi
 
-    # Создание виртуального окружения
     echo "+ Создание виртуального окружения..."
     python3 -m venv "$VENV_DIR"
     source "$VENV_DIR/bin/activate"
     pip install --upgrade pip requests tqdm
     deactivate
 
-    # Копирование скрипта в директорию установки
     echo "+ Копирование скрипта..."
     cp "$SCRIPT_NAME" "$INSTALL_DIR/$SCRIPT_NAME"
 
-    # Создание исполняемого файла в /usr/local/bin
     echo "+ Создание символьной ссылки в /usr/local/bin..."
     echo '#!/usr/bin/env bash
 VENV_PATH="'$VENV_DIR'"
