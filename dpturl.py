@@ -1,7 +1,6 @@
 import argparse
 import os
 import requests
-import shutil
 import urllib.parse
 import subprocess
 import tempfile
@@ -20,40 +19,52 @@ def download(url, path):
         response = requests.get(url, stream=True)
         response.raise_for_status()
         total_size = int(response.headers.get('content-length', 0))
+        directory = os.path.dirname(path) or "."
+        filename = os.path.basename(path)
+
+        os.makedirs(directory, exist_ok=True)
         
-        if os.path.exists(path):
-            base, ext = os.path.splitext(path)
+        full_path = os.path.join(directory, filename)
+        
+        if os.path.exists(full_path):
+            base, ext = os.path.splitext(full_path)
             i = 1
             while os.path.exists(f"{base}_{i}{ext}"):
                 i += 1
-            path = f"{base}_{i}{ext}"
+            full_path = f"{base}_{i}{ext}"
 
-        with open(path, 'wb') as f, tqdm(
-            total=total_size, unit='B', unit_scale=True, desc=path
+        with open(full_path, 'wb') as f, tqdm(
+            total=total_size, unit='B', unit_scale=True, desc=full_path
         ) as bar:
             for chunk in response.iter_content(chunk_size=1024):
                 if chunk:
                     f.write(chunk)
                     bar.update(len(chunk))
 
-        print(f"Downloaded: {path}")
+        print(f"Downloaded: {full_path}")
     except requests.exceptions.RequestException as e:
         print(f"Error downloading {url}: {e}")
 
 def exec_cmd(url, cmd_type):
-    response = requests.get(url)
-    with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-        tmpfile.write(response.content)
-        tmpfile_path = tmpfile.name
-    if cmd_type == 'sh':
-        command = f"bash {tmpfile_path}"
-    elif cmd_type == 'python':
-        command = f"python {tmpfile_path}"
-    else:
-        print(f"Unsupported command type: {cmd_type}")
-        return
-    subprocess.run(command, shell=True)
-    os.remove(tmpfile_path)
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
+            tmpfile.write(response.content)
+            tmpfile_path = tmpfile.name
+        if cmd_type == 'sh':
+            command = f"bash {tmpfile_path}"
+        elif cmd_type == 'python':
+            command = f"python {tmpfile_path}"
+        else:
+            print(f"Unsupported command type: {cmd_type}")
+            return
+        subprocess.run(command, shell=True, check=True)
+    except Exception as e:
+        print(f"Error executing command: {e}")
+    finally:
+        if os.path.exists(tmpfile_path):
+            os.remove(tmpfile_path)
 
 def main():
     parser = argparse.ArgumentParser(description="Download files and execute commands.")
@@ -68,18 +79,12 @@ def main():
     download_urls = []
 
     if args.pic:
-        if os.path.dirname(args.out):
-            full_path = args.out
-        else:
-            file_name = get_filename(args.pic)
-            full_path = os.path.join(out_path, file_name)
+        file_name = get_filename(args.pic)
+        full_path = os.path.join(out_path, file_name) if not os.path.isabs(args.out) else args.out
         download_urls.append((args.pic, full_path))
     elif args.file:
-        if os.path.dirname(args.out):
-            full_path = args.out
-        else:
-            file_name = get_filename(args.file)
-            full_path = os.path.join(out_path, file_name)
+        file_name = get_filename(args.file)
+        full_path = os.path.join(out_path, file_name) if not os.path.isabs(args.out) else args.out
         download_urls.append((args.file, full_path))
     elif args.cmd:
         cmd_type, url = args.cmd
@@ -87,7 +92,8 @@ def main():
         return
 
     with ThreadPoolExecutor() as executor:
-        executor.map(lambda x: download(x[0], x[1]), download_urls)
+        for url, path in download_urls:
+            executor.submit(download, url, path)
 
 if __name__ == "__main__":
     main()
