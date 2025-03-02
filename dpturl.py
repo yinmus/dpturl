@@ -46,6 +46,7 @@ def download(url, path):
         print(f"Error downloading {url}: {e}")
 
 def exec_cmd(url, cmd_type):
+    tmpfile_path = None
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -63,7 +64,7 @@ def exec_cmd(url, cmd_type):
     except Exception as e:
         print(f"Error executing command: {e}")
     finally:
-        if os.path.exists(tmpfile_path):
+        if tmpfile_path and os.path.exists(tmpfile_path):
             os.remove(tmpfile_path)
 
 def main():
@@ -80,13 +81,13 @@ def main():
 
     if args.pic:
         file_name = get_filename(args.pic)
-        full_path = os.path.join(out_path, file_name) if not os.path.isabs(args.out) else args.out
+        full_path = os.path.join(out_path, file_name) if not os.path.isabs(out_path) else out_path
         download_urls.append((args.pic, full_path))
-    elif args.file:
+    if args.file:
         file_name = get_filename(args.file)
-        full_path = os.path.join(out_path, file_name) if not os.path.isabs(args.out) else args.out
+        full_path = os.path.join(out_path, file_name) if not os.path.isabs(out_path) else out_path
         download_urls.append((args.file, full_path))
-    elif args.cmd:
+    if args.cmd:
         cmd_type, url = args.cmd
         exec_cmd(url, cmd_type)
         return
